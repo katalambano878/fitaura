@@ -41,3 +41,9 @@ yarn-error.log*
 # Build artifacts / logs
 build_log.txt
 build_errors.log
+
+migration-artifacts/dumps/
+
+migration-artifacts/storage/
+
+.env.staging

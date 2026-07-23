@@ -1,36 +1,36 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createClient as createSupabaseJsClient } from '@supabase/supabase-js';
+import { isPlainPostgres } from './db/mode';
+import { createClient as createPgClient } from './db/supabase-compat';
 
 /**
- * Server-side Supabase client with service role key.
- * ONLY use this in API routes and server actions — NEVER in client components.
- * This bypasses RLS, so always verify the caller is authorized first.
- * Client is created lazily so the app can build when env vars are not set (e.g. CI/Vercel build).
+ * Server-side admin client.
+ * - Plain Postgres (DATABASE_URL set): in-process pg compat + auth/storage shims
+ * - Otherwise: hosted Supabase service-role client
+ *
+ * ONLY use in API routes / server actions — never in client components.
  */
 
-let _adminClient: SupabaseClient | null = null;
+function createAdminClient() {
+  if (isPlainPostgres()) {
+    return createPgClient();
+  }
 
-function getSupabaseAdmin(): SupabaseClient {
-    if (_adminClient) return _adminClient;
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!supabaseUrl) {
-        throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL');
-    }
-    if (!supabaseServiceKey) {
-        console.error('CRITICAL: Missing SUPABASE_SERVICE_ROLE_KEY — admin operations will fail');
-    }
-    _adminClient = createClient(supabaseUrl, supabaseServiceKey || '', {
-        auth: {
-            autoRefreshToken: false,
-            persistSession: false,
-        },
-    });
-    return _adminClient;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl) {
+    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL');
+  }
+  if (!supabaseServiceKey) {
+    console.error('CRITICAL: Missing SUPABASE_SERVICE_ROLE_KEY — admin operations will fail');
+  }
+
+  return createSupabaseJsClient(supabaseUrl, supabaseServiceKey || '', {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
 }
 
-/** Lazy-initialized so build succeeds without env vars; throws at runtime if missing. */
-export const supabaseAdmin = new Proxy({} as SupabaseClient, {
-    get(_, prop) {
-        return (getSupabaseAdmin() as unknown as Record<string | symbol, unknown>)[prop];
-    },
-});
+export const supabaseAdmin: any = createAdminClient();

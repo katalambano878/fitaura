@@ -32,7 +32,8 @@
     "seo:assets": "node scripts/generate-seo-assets.mjs",
     "create-admin": "node scripts/create-admin-user.mjs",
     "upload-media": "node scripts/upload-homepage-media.mjs",
-    "images:compress": "node scripts/compress-images.mjs"
+    "images:compress": "node scripts/compress-images.mjs",
+    "start": "next start -H 0.0.0.0 -p 3000"
   },
   "dependencies": {
     "@react-google-maps/api": "^2.19.3",
@@ -47,7 +48,9 @@
     "react-dom": "^19.0.0",
     "recharts": "^3.0.2",
     "resend": "^6.9.1",
-    "stripe": "^22.1.1"
+    "stripe": "^22.1.1",
+    "bcryptjs": "^2.4.3",
+    "jose": "^5.9.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -64,6 +67,9 @@
     "sharp": "^0.34.5",
     "supabase": "^2.76.0",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5"
+    "typescript": "^5",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/pg": "^8.11.10",
+    "dotenv-cli": "^7.4.2"
   }
 }
