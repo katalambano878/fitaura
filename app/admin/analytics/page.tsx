@@ -1,5 +1,6 @@
 'use client';
 
+import { money } from '@/lib/format-money';
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -226,7 +227,7 @@ export default function AnalyticsPage() {
               </div>
             </div>
             <p className="text-sm text-gray-600 mb-1">Avg. Order Value</p>
-            <p className="text-3xl font-bold text-gray-900">${metrics.aov.toFixed(2)}</p>
+            <p className="text-3xl font-bold text-gray-900">${money(metrics.aov)}</p>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm p-6">

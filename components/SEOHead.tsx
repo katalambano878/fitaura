@@ -1,3 +1,4 @@
+import { money } from '@/lib/format-money';
 import { Metadata } from 'next';
 
 const SITE_NAME = 'FITAURA';
@@ -140,7 +141,7 @@ export function generateProductSchema(product: {
     offers: {
       '@type': 'Offer',
       url: product.url,
-      price: product.price.toFixed(2),
+      price: money(product.price),
       priceCurrency: product.currency || 'CAD',
       availability: availabilityMap[product.availability || 'in_stock'],
       priceValidUntil,

@@ -1,5 +1,6 @@
 'use client';
 
+import { money } from '@/lib/format-money';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
@@ -158,7 +159,7 @@ export default function AdminCouponsPage() {
                       {coupon.type === 'Percentage' ? `${coupon.value}%` : coupon.type === 'Fixed Amount' ? `$ ${coupon.value}` : 'Free Shipping'}
                     </td>
                     <td className="py-4 px-4 text-gray-700 whitespace-nowrap">
-                      {coupon.minPurchase > 0 ? `$ ${coupon.minPurchase.toFixed(2)}` : 'No minimum'}
+                      {coupon.minPurchase > 0 ? `$ ${money(coupon.minPurchase)}` : 'No minimum'}
                     </td>
                     <td className="py-4 px-4">
                       <div className="flex items-center space-x-2">

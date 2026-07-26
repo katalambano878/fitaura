@@ -1,5 +1,6 @@
 'use client';
 
+import { money } from '@/lib/format-money';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useParams } from 'next/navigation';
@@ -87,7 +88,7 @@ export default function CustomerDetailsPage() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                     <p className="text-sm font-medium text-gray-500 mb-1">Total Spent</p>
-                    <p className="text-2xl font-bold text-gray-900">${totalSpent.toFixed(2)}</p>
+                    <p className="text-2xl font-bold text-gray-900">${money(totalSpent)}</p>
                 </div>
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                     <p className="text-sm font-medium text-gray-500 mb-1">Total Orders</p>
@@ -142,7 +143,7 @@ export default function CustomerDetailsPage() {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-sm font-bold text-gray-900">
-                                        ${(order.total || 0).toFixed(2)}
+                                        ${money(order.total || 0)}
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <Link href={`/admin/orders/${order.id}`} className="text-gray-400 hover:text-sienna-500">

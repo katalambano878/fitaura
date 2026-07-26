@@ -1,5 +1,6 @@
 'use client';
 
+import { money } from '@/lib/format-money';
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
@@ -132,7 +133,7 @@ export default function MiniCart({ isOpen, onClose }: MiniCartProps) {
                         </div>
 
                         <span className="text-base font-bold text-sienna-500">
-                          ${(item.price * item.quantity).toFixed(2)}
+                          ${money(item.price * item.quantity)}
                         </span>
                       </div>
                       {item.quantity >= item.maxStock && (
@@ -153,7 +154,7 @@ export default function MiniCart({ isOpen, onClose }: MiniCartProps) {
             >
               <div className="flex items-center justify-between mb-1">
                 <span className="text-gray-700 font-medium text-sm">Subtotal</span>
-                <span className="text-xl font-bold text-gray-900">${subtotal.toFixed(2)}</span>
+                <span className="text-xl font-bold text-gray-900">${money(subtotal)}</span>
               </div>
 
               <p className="text-xs text-gray-500 mb-3">

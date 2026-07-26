@@ -1,5 +1,6 @@
 'use client';
 
+import { money } from '@/lib/format-money';
 import { useState } from 'react';
 
 interface Coupon {
@@ -81,7 +82,7 @@ export default function AdvancedCouponSystem({
 
   const handleQuickApply = (coupon: Coupon) => {
     if (coupon.minPurchase && subtotal < coupon.minPurchase) {
-      setError(`Add $${(coupon.minPurchase - subtotal).toFixed(2)} more to use this coupon`);
+      setError(`Add $${money(coupon.minPurchase - subtotal)} more to use this coupon`);
       return;
     }
     setError('');
@@ -153,7 +154,7 @@ export default function AdvancedCouponSystem({
                         </span>
                         {!isEligible && (
                           <span className="text-xs text-gray-500">
-                            Add ${needed.toFixed(2)} more
+                            Add ${money(needed)} more
                           </span>
                         )}
                       </div>

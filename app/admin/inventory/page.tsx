@@ -1,5 +1,6 @@
 'use client';
 
+import { money } from '@/lib/format-money';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -108,7 +109,7 @@ export default function InventoryManagementPage() {
         p.name,
         p.category,
         p.currentStock.toString(),
-        p.price.toFixed(2),
+        money(p.price),
         p.status
       ])
     ];
@@ -315,7 +316,7 @@ export default function InventoryManagementPage() {
                       </td>
                       <td className="px-6 py-4">
                         <span className="font-semibold text-gray-900">
-                          ${(product.currentStock * product.price).toFixed(2)}
+                          ${money(product.currentStock * product.price)}
                         </span>
                       </td>
                       <td className="px-6 py-4">

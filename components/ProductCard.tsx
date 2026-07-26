@@ -1,5 +1,6 @@
 'use client';
 
+import { money } from '@/lib/format-money';
 import { useState } from 'react';
 import Link from 'next/link';
 import LazyImage from './LazyImage';
@@ -81,7 +82,7 @@ export default function ProductCard({
   const discount = originalPrice ? Math.round((1 - displayPrice / originalPrice) * 100) : 0;
   const MAX_SWATCHES = 5;
   const symbol = getSetting('currency_symbol') || '$';
-  const formatPrice = (val: number) => `${symbol}${val.toFixed(2)}`;
+  const formatPrice = (val: number) => `${symbol}${money(val)}`;
 
   const onWishlistClick = (e: React.MouseEvent) => {
     e.preventDefault();

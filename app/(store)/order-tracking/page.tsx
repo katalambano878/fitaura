@@ -1,5 +1,6 @@
 'use client';
 
+import { money } from '@/lib/format-money';
 import Link from 'next/link';
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -323,7 +324,7 @@ function OrderTrackingContent() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Total</p>
-                  <p className="font-semibold text-gray-900">$ {Number(order.total).toFixed(2)}</p>
+                  <p className="font-semibold text-gray-900">$ {money(order.total)}</p>
                 </div>
               </div>
             </div>
@@ -411,7 +412,7 @@ function OrderTrackingContent() {
                     <p className="text-xs text-gray-500">{item.variant_name}</p>
                   )}
                 </div>
-                <p className="font-bold text-sienna-500">$ {Number(item.unit_price).toFixed(2)}</p>
+                <p className="font-bold text-sienna-500">$ {money(item.unit_price)}</p>
               </div>
             ))}
           </div>

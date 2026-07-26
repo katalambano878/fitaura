@@ -1,5 +1,6 @@
 'use client';
 
+import { money } from '@/lib/format-money';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -102,7 +103,7 @@ export default function AdminDashboard() {
         setStats([
           {
             title: 'Total Revenue',
-            value: `$ ${totalRevenue.toFixed(2)}`,
+            value: `$ ${money(totalRevenue)}`,
             change: '+0%', // Dynamic change requires date filtering logic which is complex
             trend: 'up',
             icon: 'ri-money-dollar-circle-line',
@@ -126,7 +127,7 @@ export default function AdminDashboard() {
           },
           {
             title: 'Avg Order Value',
-            value: `$ ${avgOrderValue.toFixed(2)}`,
+            value: `$ ${money(avgOrderValue)}`,
             change: '+0%',
             trend: 'up',
             icon: 'ri-line-chart-line',
@@ -288,7 +289,7 @@ export default function AdminDashboard() {
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(value) => `$${value}`} />
                   <Tooltip
                     contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                    formatter={(value) => [`$${(value as number)?.toFixed(2) ?? '0.00'}`, 'Revenue']}
+                    formatter={(value) => [`$${money(value as number) ?? '0.00'}`, 'Revenue']}
                   />
                   <Area type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
                 </AreaChart>
@@ -366,7 +367,7 @@ export default function AdminDashboard() {
                           <p className="text-sm text-gray-500">{order.email}</p>
                         </td>
                         <td className="py-4 px-4 text-gray-700 whitespace-nowrap">{order.date}</td>
-                        <td className="py-4 px-4 font-semibold text-gray-900 whitespace-nowrap">$ {order.total.toFixed(2)}</td>
+                        <td className="py-4 px-4 font-semibold text-gray-900 whitespace-nowrap">$ {money(order.total)}</td>
                         <td className="py-4 px-4">
                           <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${statusColors[order.status] || 'bg-gray-100'}`}>
                             {order.status === 'shipped' ? 'Packaged' : order.status.charAt(0).toUpperCase() + order.status.slice(1)}

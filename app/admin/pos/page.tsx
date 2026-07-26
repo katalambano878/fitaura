@@ -1,5 +1,6 @@
 'use client';
 
+import { money } from '@/lib/format-money';
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { REGION_NAMES, citiesForRegion } from '@/lib/canada-regions';
@@ -480,7 +481,7 @@ export default function POSPage() {
                                     <div className="p-3 flex flex-col flex-1">
                                         <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 mb-auto">{product.name}</h3>
                                         <div className="flex items-center justify-between mt-2 pt-2">
-                                            <span className="text-sienna-500 font-bold">${product.price.toFixed(2)}</span>
+                                            <span className="text-sienna-500 font-bold">${money(product.price)}</span>
                                             <button className="w-8 h-8 rounded-full bg-cream-100 text-sienna-500 flex items-center justify-center group-hover:bg-sienna-500 group-hover:text-white transition-colors">
                                                 <i className="ri-add-line"></i>
                                             </button>
@@ -504,7 +505,7 @@ export default function POSPage() {
                                 Items
                             </span>
                             <span>View Cart</span>
-                            <span>${grandTotal.toFixed(2)}</span>
+                            <span>${money(grandTotal)}</span>
                         </button>
                     </div>
                 )}
@@ -560,7 +561,7 @@ export default function POSPage() {
                                                 <i className="ri-add-line text-xs"></i>
                                             </button>
                                         </div>
-                                        <p className="text-sm font-bold text-gray-900">${(item.price * item.cartQuantity).toFixed(2)}</p>
+                                        <p className="text-sm font-bold text-gray-900">${money(item.price * item.cartQuantity)}</p>
                                     </div>
                                 </div>
                             </div>
@@ -573,7 +574,7 @@ export default function POSPage() {
                     <div className="space-y-1 text-sm">
                         <div className="flex justify-between text-gray-600">
                             <span>Subtotal</span>
-                            <span>${cartTotal.toFixed(2)}</span>
+                            <span>${money(cartTotal)}</span>
                         </div>
                         <div className="flex justify-between text-gray-600">
                             <span>Tax (0%)</span>
@@ -581,7 +582,7 @@ export default function POSPage() {
                         </div>
                         <div className="flex justify-between text-xl font-bold text-gray-900 pt-2 border-t border-gray-200 mt-2">
                             <span>Total</span>
-                            <span>${grandTotal.toFixed(2)}</span>
+                            <span>${money(grandTotal)}</span>
                         </div>
                     </div>
 
@@ -598,7 +599,7 @@ export default function POSPage() {
                             disabled={cart.length === 0}
                             className="px-4 py-3 bg-sienna-500 text-white rounded-lg hover:bg-sienna-500 font-bold text-sm shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Charge ${grandTotal.toFixed(2)}
+                            Charge ${money(grandTotal)}
                         </button>
                     </div>
                 </div>
@@ -623,7 +624,7 @@ export default function POSPage() {
                                     {!completedOrder.paymentPending && paymentMethod === 'cash' && changeDue > 0 && (
                                         <div className="mt-3 bg-cream-100 border border-sienna-100 rounded-lg p-3">
                                             <p className="text-sm text-sienna-500">Change Due</p>
-                                            <p className="text-2xl font-bold text-sienna-600">${changeDue.toFixed(2)}</p>
+                                            <p className="text-2xl font-bold text-sienna-600">${money(changeDue)}</p>
                                         </div>
                                     )}
 
@@ -689,7 +690,7 @@ export default function POSPage() {
                                     {/* Total Display */}
                                     <div className="text-center py-4 bg-cream-100 rounded-xl border border-sienna-50">
                                         <p className="text-sm text-sienna-600 uppercase tracking-wide font-semibold">Amount to Pay</p>
-                                        <p className="text-4xl font-extrabold text-sienna-500 mt-1">${grandTotal.toFixed(2)}</p>
+                                        <p className="text-4xl font-extrabold text-sienna-500 mt-1">${money(grandTotal)}</p>
                                     </div>
 
                                     {/* Customer Select */}
@@ -897,7 +898,7 @@ export default function POSPage() {
                                                 />
                                             </div>
                                             {changeDue > 0 && (
-                                                <p className="text-right text-sienna-500 font-bold mt-2">Change: ${changeDue.toFixed(2)}</p>
+                                                <p className="text-right text-sienna-500 font-bold mt-2">Change: ${money(changeDue)}</p>
                                             )}
                                             {changeDue < 0 && amountTendered && (
                                                 <p className="text-right text-red-500 font-medium mt-2">Insufficient amount</p>
@@ -910,7 +911,7 @@ export default function POSPage() {
                                                         onClick={() => setAmountTendered(amount.toString())}
                                                         className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-colors"
                                                     >
-                                                        ${amount.toFixed(2)}
+                                                        ${money(amount)}
                                                     </button>
                                                 ))}
                                             </div>

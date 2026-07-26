@@ -1,3 +1,4 @@
+import { money } from '@/lib/format-money';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { createClient } from '@supabase/supabase-js';
@@ -162,7 +163,7 @@ export async function generateMetadata({
       site: '@fitaura_ca',
     },
     other: {
-      'product:price:amount': product.price.toFixed(2),
+      'product:price:amount': money(product.price),
       'product:price:currency': 'CAD',
       'product:availability': product.in_stock ? 'in stock' : 'out of stock',
       'product:brand': 'FITAURA',

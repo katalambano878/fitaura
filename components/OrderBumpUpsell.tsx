@@ -1,5 +1,6 @@
 'use client';
 
+import { money } from '@/lib/format-money';
 interface UpsellProduct {
   id: string;
   name: string;
@@ -61,10 +62,10 @@ export default function OrderBumpUpsell({ products, onToggle }: OrderBumpUpsellP
                 <h4 className="font-semibold text-gray-900 mb-1">{product.name}</h4>
                 <p className="text-sm text-gray-600 mb-2">{product.description}</p>
                 <div className="flex items-center space-x-2">
-                  <span className="text-lg font-bold text-sienna-500">${product.price.toFixed(2)}</span>
+                  <span className="text-lg font-bold text-sienna-500">${money(product.price)}</span>
                   {product.originalPrice && (
                     <>
-                      <span className="text-sm text-gray-400 line-through">${product.originalPrice.toFixed(2)}</span>
+                      <span className="text-sm text-gray-400 line-through">${money(product.originalPrice)}</span>
                       <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-semibold whitespace-nowrap">
                         Save {Math.round((1 - product.price / product.originalPrice) * 100)}%
                       </span>

@@ -1,5 +1,6 @@
 'use client';
 
+import { money } from '@/lib/format-money';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -117,23 +118,23 @@ export default function PaymentPage() {
           <div className="space-y-3 mb-6">
             <div className="flex justify-between text-sm">
               <span className="text-ink-500">Subtotal</span>
-              <span className="text-ink-900">{currency} {order?.subtotal?.toFixed(2)}</span>
+              <span className="text-ink-900">{currency} {money(order?.subtotal)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-ink-500">Shipping</span>
-              <span className="text-ink-900">{currency} {order?.shipping_total?.toFixed(2)}</span>
+              <span className="text-ink-900">{currency} {money(order?.shipping_total)}</span>
             </div>
             {order?.discount_total > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="text-ink-500">Discount</span>
-                <span className="text-green-600">−{currency} {order?.discount_total?.toFixed(2)}</span>
+                <span className="text-green-600">−{currency} {money(order?.discount_total)}</span>
               </div>
             )}
           </div>
 
           <div className="flex justify-between items-center pt-4 border-t border-cream-200">
             <span className="text-lg font-semibold text-ink-900">Total</span>
-            <span className="text-2xl font-bold text-sienna-500">{currency} {order?.total?.toFixed(2)}</span>
+            <span className="text-2xl font-bold text-sienna-500">{currency} {money(order?.total)}</span>
           </div>
         </div>
 
