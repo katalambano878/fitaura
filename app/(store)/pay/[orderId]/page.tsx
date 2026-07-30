@@ -4,7 +4,6 @@ import { money } from '@/lib/format-money';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import StripePaymentForm from '@/components/StripePaymentForm';
 
@@ -31,18 +30,20 @@ export default function PaymentPage() {
   useEffect(() => {
     async function fetchOrder() {
       try {
-        const { data, error: fetchError } = await supabase
-          .from('orders')
-          .select('*')
-          .or(`id.eq.${orderId},order_number.eq.${orderId}`)
-          .single();
+        const res = await fetch('/api/storefront/orders/lookup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mode: 'pay', orderId }),
+        });
+        const result = await res.json().catch(() => ({}));
 
-        if (fetchError || !data) {
-          setError('Order not found. Please check your link and try again.');
+        if (!res.ok || !result.success || !result.order) {
+          setError(result.message || 'Order not found. Please check your link and try again.');
           setLoading(false);
           return;
         }
 
+        const data = result.order;
         if (data.payment_status === 'paid') {
           router.push(`/order-success?order=${data.order_number}`);
           return;

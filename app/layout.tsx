@@ -248,7 +248,9 @@ export default function RootLayout({
         {/* theme-color is emitted by the `viewport` export above; do not duplicate here. */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ucbokethripnihazffcg.supabase.co'} crossOrigin="anonymous" />
+        {process.env.NEXT_PUBLIC_SUPABASE_URL ? (
+          <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL} crossOrigin="anonymous" />
+        ) : null}
         <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
 
         <link

@@ -1,17 +1,15 @@
 import { money } from '@/lib/format-money';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { createClient } from '@supabase/supabase-js';
 import ProductDetailClient from './ProductDetailClient';
 import {
   StructuredData,
   generateProductSchema,
   generateBreadcrumbSchema,
 } from '@/components/SEOHead';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://shopfitaura.com';
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 interface ProductSEO {
   id: string;
@@ -36,14 +34,10 @@ interface ProductSEO {
 }
 
 async function getProductForSEO(slug: string): Promise<ProductSEO | null> {
-  if (!SUPABASE_URL || !SUPABASE_KEY || SUPABASE_URL.includes('YOUR_PROJECT_REF')) {
-    return null;
-  }
   try {
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
 
-    let query = supabase
+    let query = supabaseAdmin
       .from('products')
       .select(`
         id, slug, name, description, short_description, seo_title, seo_description,

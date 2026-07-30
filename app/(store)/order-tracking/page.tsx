@@ -4,8 +4,6 @@ import { money } from '@/lib/format-money';
 import Link from 'next/link';
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
-
 function OrderTrackingContent() {
   const searchParams = useSearchParams();
   const urlOrderNumber = searchParams.get('order') || '';
@@ -33,48 +31,24 @@ function OrderTrackingContent() {
     setError('');
 
     try {
-      // Only select the fields we need — avoid exposing unnecessary data
-      const { data, error: fetchError } = await supabase
-        .from('orders')
-        .select(`
-          id,
-          order_number,
-          status,
-          payment_status,
-          total,
-          email,
-          created_at,
-          shipping_address,
-          metadata,
-          order_items (
-            id,
-            product_name,
-            variant_name,
-            quantity,
-            unit_price,
-            metadata,
-            products (
-              product_images (url)
-            )
-          )
-        `)
-        .eq('order_number', orderNum)
-        .single();
+      const res = await fetch('/api/storefront/orders/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: 'track',
+          orderNumber: orderNum,
+          email: emailToVerify,
+        }),
+      });
+      const result = await res.json().catch(() => ({}));
 
-      if (fetchError || !data) {
-        setError('Order not found. Please check your order number and try again.');
+      if (!res.ok || !result.success || !result.order) {
+        setError(result.message || 'Order not found. Please check your order number and try again.');
         setIsTracking(false);
         return;
       }
 
-      // SECURITY: Always verify email matches — this is mandatory
-      if (data.email?.toLowerCase() !== emailToVerify.toLowerCase()) {
-        setError('The email address does not match this order. Please use the email you placed the order with.');
-        setIsTracking(false);
-        return;
-      }
-
-      setOrder(data);
+      setOrder(result.order);
       setIsTracking(true);
     } catch (err) {
       console.error('Error fetching order:', err);

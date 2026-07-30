@@ -1,9 +1,7 @@
 import { MetadataRoute } from 'next';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://shopfitaura.com';
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 type SitemapEntry = MetadataRoute.Sitemap[number];
 
@@ -27,70 +25,61 @@ const STATIC_PAGES: SitemapEntry[] = [
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const dynamic: SitemapEntry[] = [];
 
-  if (supabaseUrl && supabaseKey && !supabaseUrl.includes('YOUR_PROJECT_REF')) {
-    try {
-      const supabase = createClient(supabaseUrl, supabaseKey);
+  try {
+    const { data: products } = await supabaseAdmin
+      .from('products')
+      .select('slug, updated_at')
+      .eq('status', 'active')
+      .order('updated_at', { ascending: false })
+      .limit(1000);
 
-      // Products
-      const { data: products } = await supabase
-        .from('products')
-        .select('slug, updated_at')
-        .eq('status', 'active')
-        .order('updated_at', { ascending: false })
-        .limit(1000);
-
-      if (products) {
-        for (const p of products) {
-          dynamic.push({
-            url: `${SITE_URL}/product/${p.slug}`,
-            lastModified: p.updated_at ? new Date(p.updated_at) : new Date(),
-            changeFrequency: 'weekly',
-            priority: 0.8,
-          });
-        }
+    if (products) {
+      for (const p of products) {
+        dynamic.push({
+          url: `${SITE_URL}/product/${p.slug}`,
+          lastModified: p.updated_at ? new Date(p.updated_at) : new Date(),
+          changeFrequency: 'weekly',
+          priority: 0.8,
+        });
       }
-
-      // Categories  (route lives under /shop?category= for the storefront, but
-      //  we publish /category/<slug> in the sitemap because the legacy route
-      //  redirects to /shop?category=<slug>.)
-      const { data: categories } = await supabase
-        .from('categories')
-        .select('slug, updated_at')
-        .eq('status', 'active')
-        .order('position', { ascending: true });
-
-      if (categories) {
-        for (const c of categories) {
-          dynamic.push({
-            url: `${SITE_URL}/shop?category=${encodeURIComponent(c.slug)}`,
-            lastModified: c.updated_at ? new Date(c.updated_at) : new Date(),
-            changeFrequency: 'weekly',
-            priority: 0.75,
-          });
-        }
-      }
-
-      // Blog posts
-      const { data: posts } = await supabase
-        .from('blog_posts')
-        .select('slug, updated_at, published_at')
-        .eq('status', 'published')
-        .order('published_at', { ascending: false })
-        .limit(1000);
-
-      if (posts) {
-        for (const post of posts) {
-          dynamic.push({
-            url: `${SITE_URL}/blog/${post.slug}`,
-            lastModified: post.updated_at ? new Date(post.updated_at) : new Date(),
-            changeFrequency: 'monthly',
-            priority: 0.6,
-          });
-        }
-      }
-    } catch (error) {
-      console.error('[sitemap] Error fetching dynamic entries:', error);
     }
+
+    const { data: categories } = await supabaseAdmin
+      .from('categories')
+      .select('slug, updated_at')
+      .eq('status', 'active')
+      .order('position', { ascending: true });
+
+    if (categories) {
+      for (const c of categories) {
+        dynamic.push({
+          url: `${SITE_URL}/shop?category=${encodeURIComponent(c.slug)}`,
+          lastModified: c.updated_at ? new Date(c.updated_at) : new Date(),
+          changeFrequency: 'weekly',
+          priority: 0.75,
+        });
+      }
+    }
+
+    const { data: posts } = await supabaseAdmin
+      .from('blog_posts')
+      .select('slug, updated_at, published_at')
+      .eq('status', 'published')
+      .order('published_at', { ascending: false })
+      .limit(1000);
+
+    if (posts) {
+      for (const post of posts) {
+        dynamic.push({
+          url: `${SITE_URL}/blog/${post.slug}`,
+          lastModified: post.updated_at ? new Date(post.updated_at) : new Date(),
+          changeFrequency: 'monthly',
+          priority: 0.6,
+        });
+      }
+    }
+  } catch (error) {
+    console.error('[sitemap] Error fetching dynamic entries:', error);
   }
 
   return [...STATIC_PAGES, ...dynamic];

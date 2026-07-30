@@ -143,16 +143,27 @@ async function handlePaymentFailed(intent: Stripe.PaymentIntent) {
   const orderNumber = (intent.metadata?.order_number as string | undefined) ?? null;
   if (!orderNumber) return;
 
+  const { data: order } = await supabaseAdmin
+    .from('orders')
+    .select('id, payment_status, metadata')
+    .eq('order_number', orderNumber)
+    .single();
+
+  // Never overwrite a successful payment with a delayed failure event.
+  if (!order || order.payment_status === 'paid') return;
+
   await supabaseAdmin
     .from('orders')
     .update({
       payment_status: 'failed',
       metadata: {
+        ...(order.metadata || {}),
         stripe_payment_intent_id: intent.id,
         failure_reason: intent.last_payment_error?.message ?? 'Payment failed',
       },
     })
-    .eq('order_number', orderNumber);
+    .eq('id', order.id)
+    .neq('payment_status', 'paid');
 }
 
 async function handleChargeRefunded(charge: Stripe.Charge) {
@@ -176,17 +187,25 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
 
   if (!lookupOrderNumber) return;
 
+  const { data: order } = await supabaseAdmin
+    .from('orders')
+    .select('id, metadata')
+    .eq('order_number', lookupOrderNumber)
+    .single();
+  if (!order) return;
+
   const fullyRefunded = charge.amount_refunded >= charge.amount;
   await supabaseAdmin
     .from('orders')
     .update({
       payment_status: fullyRefunded ? 'refunded' : 'partially_refunded',
       metadata: {
+        ...(order.metadata || {}),
         stripe_refund_amount: fromStripeAmount(charge.amount_refunded, charge.currency),
         stripe_last_refund_at: new Date().toISOString(),
       },
     })
-    .eq('order_number', lookupOrderNumber);
+    .eq('id', order.id);
 }
 
 export async function GET() {

@@ -8,14 +8,17 @@ import { createClient as createPgClient } from './db/supabase-compat';
  * - Otherwise: hosted Supabase service-role client
  *
  * ONLY use in API routes / server actions — never in client components.
+ * Lazily initialized so `next build` page collection does not require env.
  */
+
+let _admin: any | null = null;
 
 function createAdminClient() {
   if (isPlainPostgres()) {
     return createPgClient();
   }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl) {
@@ -33,4 +36,20 @@ function createAdminClient() {
   });
 }
 
-export const supabaseAdmin: any = createAdminClient();
+function getAdminClient() {
+  if (!_admin) {
+    _admin = createAdminClient();
+  }
+  return _admin;
+}
+
+export const supabaseAdmin: any = new Proxy(
+  {},
+  {
+    get(_target, prop, receiver) {
+      const client = getAdminClient();
+      const value = Reflect.get(client, prop, receiver);
+      return typeof value === 'function' ? value.bind(client) : value;
+    },
+  }
+);

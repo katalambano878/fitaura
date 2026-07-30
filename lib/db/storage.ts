@@ -21,11 +21,15 @@ function publicBase(): string {
 }
 
 function signingSecret(): string {
-  return (
+  const secret =
     process.env.STORAGE_SIGNING_SECRET ||
     process.env.JWT_SECRET ||
-    "storage-dev-secret"
-  );
+    process.env.AUTH_JWT_SECRET;
+  if (secret) return secret;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("STORAGE_SIGNING_SECRET (or JWT_SECRET) must be set in production");
+  }
+  return "storage-dev-secret";
 }
 
 export function signObjectToken(bucket: string, objectPath: string, expEpoch: number): string {
