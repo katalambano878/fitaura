@@ -3,6 +3,7 @@
 
 import { NextRequest } from "next/server";
 import { verifyAccessToken } from "./auth";
+import { query } from "./pool";
 
 export type RestRole = "anon" | "authenticated" | "staff" | "admin" | "service_role";
 
@@ -68,6 +69,23 @@ export async function resolveRestActor(req: NextRequest): Promise<RestActor> {
           isStaff: true,
         };
       }
+
+      // JWT may have been minted before role was set — fall back to profiles.role
+      const { rows } = await query<{ role: string }>(
+        "SELECT role FROM profiles WHERE id = $1",
+        [verified.userId]
+      );
+      const dbRole = rows[0]?.role;
+      if (dbRole === "admin" || dbRole === "staff") {
+        return {
+          role: dbRole as "admin" | "staff",
+          userId: verified.userId,
+          email: typeof verified.payload.email === "string" ? verified.payload.email : null,
+          isServiceRole: false,
+          isStaff: true,
+        };
+      }
+
       return {
         role: "authenticated",
         userId: verified.userId,

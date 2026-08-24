@@ -203,12 +203,21 @@ function deriveFkFromConstraint(constraint: string): string | undefined {
   return best;
 }
 
+function isCountOnlySelect(parsed: ParsedSelect): boolean {
+  return (
+    !parsed.star &&
+    parsed.columns.length === 1 &&
+    parsed.columns[0] === "count" &&
+    parsed.embeds.length === 0
+  );
+}
+
 function guessTableFromFk(fkColumn: string): string {
-  // group_id -> groups, user_id -> users, membership_id -> group_memberships,
+  // group_id -> groups, user_id -> profiles, membership_id -> group_memberships,
   // template_id -> (sms|email)_templates, schedule_id -> contribution_schedules
   const map: Record<string, string> = {
     group_id: "groups",
-    user_id: "users",
+    user_id: "profiles",
     membership_id: "group_memberships",
     schedule_id: "contribution_schedules",
     contribution_schedule_id: "contribution_schedules",
@@ -664,40 +673,57 @@ class QueryBuilder implements PromiseLike<{ data: any; error: any; count: number
         const edge = this.findReverseEdge(embedTable);
         const fkCol = edge?.column ?? `${singularize(this.table)}_id`;
         const parentIds = Array.from(new Set(rows.map((r) => r.id).filter(Boolean)));
-        const wantId = embedWantsId(embed.select);
-        const wantFk = embed.select.star || embed.select.columns.includes(fkCol);
-        const innerCols = this.embedColumns(embed.select, fkCol);
-        let related: Row[] = [];
-        if (parentIds.length) {
-          const ph = parentIds.map((_, i) => `$${i + 1}`).join(",");
-          // Prefer stable gallery order only on tables that actually have `position`
-          // (product_variants(*) was incorrectly ORDER BY position → homepage empty).
-          const tablesWithPosition = new Set([
-            "product_images",
-            "review_images",
-            "navigation_items",
-          ]);
-          const orderBy =
-            tablesWithPosition.has(embedTable) &&
-            (embed.select.star || embed.select.columns.includes("position"))
-              ? ` ORDER BY ${ident("position")} ASC NULLS LAST`
-              : "";
-          const res = await pool.query(
-            `SELECT ${innerCols} FROM ${ident(embedTable)} WHERE ${ident(fkCol)} IN (${ph})${orderBy}`,
-            parentIds
-          );
-          related = res.rows;
+
+        if (isCountOnlySelect(embed.select)) {
+          const counts = new Map<any, number>();
+          if (parentIds.length) {
+            const ph = parentIds.map((_, i) => `$${i + 1}`).join(",");
+            const res = await pool.query(
+              `SELECT ${ident(fkCol)}, COUNT(*)::int AS count FROM ${ident(embedTable)} WHERE ${ident(fkCol)} IN (${ph}) GROUP BY ${ident(fkCol)}`,
+              parentIds
+            );
+            for (const row of res.rows) counts.set(row[fkCol], row.count);
+          }
+          for (const r of rows) {
+            const n = counts.get(r.id) ?? 0;
+            r[embed.alias] = n > 0 ? [{ count: n }] : [];
+          }
+        } else {
+          const wantId = embedWantsId(embed.select);
+          const wantFk = embed.select.star || embed.select.columns.includes(fkCol);
+          const innerCols = this.embedColumns(embed.select, fkCol);
+          let related: Row[] = [];
+          if (parentIds.length) {
+            const ph = parentIds.map((_, i) => `$${i + 1}`).join(",");
+            // Prefer stable gallery order only on tables that actually have `position`
+            // (product_variants(*) was incorrectly ORDER BY position → homepage empty).
+            const tablesWithPosition = new Set([
+              "product_images",
+              "review_images",
+              "navigation_items",
+            ]);
+            const orderBy =
+              tablesWithPosition.has(embedTable) &&
+              (embed.select.star || embed.select.columns.includes("position"))
+                ? ` ORDER BY ${ident("position")} ASC NULLS LAST`
+                : "";
+            const res = await pool.query(
+              `SELECT ${innerCols} FROM ${ident(embedTable)} WHERE ${ident(fkCol)} IN (${ph})${orderBy}`,
+              parentIds
+            );
+            related = res.rows;
+          }
+          await this.resolveEmbeds(related, embed.select);
+          const grouped = new Map<any, Row[]>();
+          for (const r of related) {
+            const k = r[fkCol];
+            if (!grouped.has(k)) grouped.set(k, []);
+            if (!wantFk) delete r[fkCol];
+            if (!wantId) delete r.id;
+            grouped.get(k)!.push(r);
+          }
+          for (const r of rows) r[embed.alias] = grouped.get(r.id) ?? [];
         }
-        await this.resolveEmbeds(related, embed.select);
-        const grouped = new Map<any, Row[]>();
-        for (const r of related) {
-          const k = r[fkCol];
-          if (!grouped.has(k)) grouped.set(k, []);
-          if (!wantFk) delete r[fkCol];
-          if (!wantId) delete r.id;
-          grouped.get(k)!.push(r);
-        }
-        for (const r of rows) r[embed.alias] = grouped.get(r.id) ?? [];
       }
     }
   }

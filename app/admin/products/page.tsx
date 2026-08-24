@@ -13,6 +13,7 @@ export default function ProductsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
 
   // Statistics
@@ -37,6 +38,7 @@ export default function ProductsPage() {
   const fetchProducts = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       let query = supabase
         .from('products')
         .select(`
@@ -81,8 +83,10 @@ export default function ProductsPage() {
           active: transformedProducts.filter(p => p.status === 'active').length
         });
       }
-    } catch (error) {
-      console.error('Error fetching products:', error);
+    } catch (err: any) {
+      console.error('Error fetching products:', err);
+      setError(err?.message || 'Failed to load products');
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -302,7 +306,19 @@ export default function ProductsPage() {
           </div>
         )}
 
-        {loading ? (
+        {error ? (
+          <div className="p-12 text-center">
+            <i className="ri-error-warning-line text-4xl mb-4 text-red-500 inline-block"></i>
+            <p className="text-lg font-semibold text-red-700">Failed to load products</p>
+            <p className="text-sm text-red-600 mt-2">{error}</p>
+            <button
+              onClick={() => fetchProducts()}
+              className="mt-4 px-4 py-2 bg-sienna-500 hover:bg-sienna-600 text-white rounded-lg text-sm font-medium transition-colors cursor-pointer"
+            >
+              Retry
+            </button>
+          </div>
+        ) : loading ? (
           <div className="p-12 text-center text-gray-500">
             <i className="ri-loader-4-line animate-spin text-3xl mb-2 inline-block"></i>
             <p>Loading products...</p>

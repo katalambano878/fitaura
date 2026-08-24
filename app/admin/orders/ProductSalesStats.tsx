@@ -46,31 +46,31 @@ export default function ProductSalesStats({ isOpen, onClose }: { isOpen: boolean
         // 'all' leaves startDate as null
 
         try {
-            // We fetch order_items and filter by the parent order's created_at
-            let query = supabase
-                .from('order_items')
-                .select(`
-          quantity,
-          product_name,
-          product_id,
-          variant_name,
-          total_price,
-          orders!inner (
-            id,
-            created_at,
-            status,
-            payment_status
-          )
-        `);
-
-            // Only include paid orders (confirmed) and exclude cancelled
-            query = query.eq('orders.payment_status', 'paid').neq('orders.status', 'cancelled');
+            // Step 1: fetch qualifying orders (nested embed filters unsupported in compat)
+            let ordersQuery = supabase
+                .from('orders')
+                .select('id')
+                .eq('payment_status', 'paid')
+                .neq('status', 'cancelled');
 
             if (startDate) {
-                query = query.gte('orders.created_at', startDate);
+                ordersQuery = ordersQuery.gte('created_at', startDate);
             }
 
-            const { data, error } = await query;
+            const { data: orders, error: ordersError } = await ordersQuery;
+            if (ordersError) throw ordersError;
+
+            const orderIds = orders?.map((o) => o.id) ?? [];
+            if (orderIds.length === 0) {
+                setStats([]);
+                return;
+            }
+
+            // Step 2: fetch order_items for those orders
+            const { data, error } = await supabase
+                .from('order_items')
+                .select('quantity, product_name, product_id, variant_name, total_price, order_id')
+                .in('order_id', orderIds);
 
             if (error) throw error;
 
@@ -103,7 +103,7 @@ export default function ProductSalesStats({ isOpen, onClose }: { isOpen: boolean
                     existing.revenue += (item.total_price || 0);
                     entry.variants.set(variantName, existing);
 
-                    const orderId = item.orders?.id;
+                    const orderId = item.order_id;
                     if (orderId && !entry._orderIds.has(orderId)) {
                         entry.ordersCount++;
                         entry._orderIds.add(orderId);
