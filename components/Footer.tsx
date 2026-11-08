@@ -192,7 +192,10 @@ export default function Footer() {
 
         {/* Copyright */}
         <div className="mt-8 pt-6 border-t border-cream-100/10 flex flex-col md:flex-row items-center justify-between gap-3 text-[11px] tracking-[0.2em] uppercase text-cream-100/40">
-          <p>&copy; {new Date().getFullYear()} {siteName}. All rights reserved.</p>
+          <p>
+            &copy; {new Date().getFullYear()} {siteName}. All rights reserved. &middot; Powered by{' '}
+            <a href="https://doctorbarns.com" target="_blank" rel="noopener" className="hover:text-cream-50 hover:underline transition-colors">Doctor Barns Tech</a>
+          </p>
           <div className="flex items-center gap-5">
             <Link href="/privacy" className="hover:text-cream-50 transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-cream-50 transition-colors">Terms</Link>
