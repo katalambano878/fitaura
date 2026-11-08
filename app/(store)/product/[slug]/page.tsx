@@ -1,5 +1,6 @@
 import { money } from '@/lib/format-money';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
+import { slugify, safeDecode } from '@/lib/slug';
 import type { Metadata } from 'next';
 import ProductDetailClient from './ProductDetailClient';
 import {
@@ -95,8 +96,9 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const { slug } = await params;
-  const product = await getProductForSEO(slug);
+  const { slug: rawSlug } = await params;
+  const slug = safeDecode(rawSlug);
+  const product = (await getProductForSEO(slug)) ?? (await getProductForSEO(slugify(slug)));
 
   if (!product) {
     return {
@@ -175,8 +177,18 @@ export default async function ProductDetailPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = safeDecode(rawSlug);
   const product = await getProductForSEO(slug);
+
+  // Old or hand-typed slugs (spaces, capitals, punctuation) → canonical clean URL.
+  if (!product) {
+    const clean = slugify(slug);
+    if (clean && clean !== slug) {
+      const match = await getProductForSEO(clean);
+      if (match) permanentRedirect(`/product/${match.slug}`);
+    }
+  }
 
   // Product JSON-LD + Breadcrumb JSON-LD. The interactive client renders below.
   let productSchema: unknown = null;

@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { money } from '@/lib/format-money';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import { slugify, slugifyInput } from '@/lib/slug';
 
 interface ProductFormProps {
     initialData?: any;
@@ -282,7 +283,7 @@ export default function ProductForm({ initialData, isEditMode = false }: Product
 
             const productData = {
                 name: productName,
-                slug: urlSlug || productName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
+                slug: slugify(urlSlug) || slugify(productName),
                 description,
                 category_id: categoryId || null,
                 price: parseFloat(price) || 0,
@@ -1062,7 +1063,7 @@ export default function ProductForm({ initialData, isEditMode = false }: Product
                                     <input
                                         type="text"
                                         value={urlSlug}
-                                        onChange={(e) => setUrlSlug(e.target.value)}
+                                        onChange={(e) => setUrlSlug(slugifyInput(e.target.value))}
                                         className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-r-lg focus:ring-2 focus:ring-sienna-500 focus:border-sienna-500"
                                         placeholder="product-slug"
                                     />
