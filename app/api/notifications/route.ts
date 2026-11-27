@@ -5,6 +5,18 @@ import { escapeHtml } from '@/lib/sanitize';
 import { sendOrderConfirmation, sendOrderStatusUpdate, sendWelcomeMessage, sendContactMessage, sendPaymentLink, sendEmail, sendSMS, emailLayout } from '@/lib/notifications';
 import { checkRateLimit, getClientIdentifier, RATE_LIMITS } from '@/lib/rate-limit';
 
+
+/**
+ * An order id or number as typed by the visitor, safe to put inside a
+ * PostgREST or() filter: only letters, digits, "-" and "_" (so a value like
+ * "x,email.ilike.someone@example.com" cannot add its own conditions).
+ * Anything else matches no order.
+ */
+function safeOrderRef(v: unknown): string {
+  const s = String(v ?? "").trim();
+  return /^[A-Za-z0-9_-]{1,80}$/.test(s) ? s : "00000000-0000-0000-0000-000000000000";
+}
+
 export async function POST(request: Request) {
     try {
         // Rate limiting
@@ -60,7 +72,7 @@ export async function POST(request: Request) {
             const { data: order, error: orderError } = await supabaseAdmin
                 .from('orders')
                 .select('id, order_number, created_at')
-                .or(`order_number.eq.${orderRef},id.eq.${orderRef}`)
+                .or(`order_number.eq.${safeOrderRef(orderRef)},id.eq.${safeOrderRef(orderRef)}`)
                 .single();
 
             if (orderError || !order) {

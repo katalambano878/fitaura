@@ -3,6 +3,18 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 import { checkRateLimit, getClientIdentifier, RATE_LIMITS } from '@/lib/rate-limit';
 import { getStripe, toStripeAmount } from '@/lib/stripe';
 
+
+/**
+ * An order id or number as typed by the visitor, safe to put inside a
+ * PostgREST or() filter: only letters, digits, "-" and "_" (so a value like
+ * "x,email.ilike.someone@example.com" cannot add its own conditions).
+ * Anything else matches no order.
+ */
+function safeOrderRef(v: unknown): string {
+  const s = String(v ?? "").trim();
+  return /^[A-Za-z0-9_-]{1,80}$/.test(s) ? s : "00000000-0000-0000-0000-000000000000";
+}
+
 /**
  * POST /api/payment/stripe/create-intent
  *
@@ -36,7 +48,7 @@ export async function POST(req: Request) {
     const { data: order, error } = await supabaseAdmin
       .from('orders')
       .select('id, order_number, total, currency, email, payment_status, metadata')
-      .or(`id.eq.${orderId},order_number.eq.${orderId}`)
+      .or(`id.eq.${safeOrderRef(orderId)},order_number.eq.${safeOrderRef(orderId)}`)
       .single();
 
     if (error || !order) {

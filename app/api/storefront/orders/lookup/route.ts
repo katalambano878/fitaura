@@ -2,6 +2,18 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 
+
+/**
+ * An order id or number as typed by the visitor, safe to put inside a
+ * PostgREST or() filter: only letters, digits, "-" and "_" (so a value like
+ * "x,email.ilike.someone@example.com" cannot add its own conditions).
+ * Anything else matches no order.
+ */
+function safeOrderRef(v: unknown): string {
+  const s = String(v ?? "").trim();
+  return /^[A-Za-z0-9_-]{1,80}$/.test(s) ? s : "00000000-0000-0000-0000-000000000000";
+}
+
 /**
  * Guest-safe order lookup that replaces open /rest/v1/orders reads.
  *
@@ -113,7 +125,7 @@ async function handlePay(body: { orderId?: string }) {
     .select(
       'id, order_number, total, currency, payment_status, email, phone, shipping_address, created_at, metadata'
     )
-    .or(`id.eq.${orderId},order_number.eq.${orderId}`)
+    .or(`id.eq.${safeOrderRef(orderId)},order_number.eq.${safeOrderRef(orderId)}`)
     .single();
 
   if (error || !data) {
